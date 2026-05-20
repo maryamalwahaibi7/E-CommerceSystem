@@ -31,6 +31,8 @@ namespace E_CommerceSystem.Models
         [Required]
         public DateTime CreatedAt { get; set; }
 
+        public bool IsActive { get; set; }
+
         public virtual ICollection<Order> Orders { get; set; } 
 
 

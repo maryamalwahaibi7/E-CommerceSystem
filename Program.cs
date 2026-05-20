@@ -156,10 +156,20 @@ namespace E_CommerceSystem
 
             string hashedLoginPassword = builder.ToString();
 
-            var foundUser = context.Users.FirstOrDefault(u => u.Name == loginName && u.Password == hashedLoginPassword);
+            var foundUser = context.Users.FirstOrDefault
+            (
+                u => u.Name == loginName &&
+                     u.Password == hashedLoginPassword
+            );
 
             if (foundUser != null)
             {
+                if (foundUser.IsActive == false)
+                {
+                    Console.WriteLine("Your account is inactive");
+                    return;
+                }
+
                 currentUserId = foundUser.U_Id;
 
                 Console.WriteLine("Login Successful");
