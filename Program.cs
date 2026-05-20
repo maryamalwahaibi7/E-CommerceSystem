@@ -1,6 +1,8 @@
 ﻿using E_CommerceSystem.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace E_CommerceSystem
 {
@@ -9,6 +11,165 @@ namespace E_CommerceSystem
         static ApplicationDbContext context = new ApplicationDbContext();
         public static int currentUserId = 0;
 
+        static bool CheckLogin()
+        {
+            if (currentUserId != 0)
+            {
+                return true;
+            }
+
+            Console.WriteLine("You must login or register first.");
+            Console.WriteLine("1. Register");
+            Console.WriteLine("2. Login");
+            Console.WriteLine("0. Cancel");
+
+            Console.Write("Enter your choice: ");
+
+            int choice;
+
+            if (!int.TryParse(Console.ReadLine(), out choice))
+            {
+                Console.WriteLine("Invalid Choice");
+                return false;
+            }
+
+            switch (choice)
+            {
+                case 1:
+                    Register();
+                    return false;
+
+                case 2:
+                    Login();
+                    return currentUserId != 0;
+
+                case 0:
+                    return false;
+
+                default:
+                    Console.WriteLine("Invalid Choice");
+                    return false;
+            }
+        }
+        static void Register()
+        {
+            Console.WriteLine("Enter Name: ");
+            string name = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                Console.WriteLine("Name cannot be empty");
+                return;
+            }
+
+            Console.WriteLine("Enter Email: ");
+            string email = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                Console.WriteLine("Email cannot be empty");
+                return;
+            }
+
+            if (context.Users.Any(u => u.Email == email))
+            {
+                Console.WriteLine("Email already exists");
+                return;
+            }
+
+            Console.WriteLine("Enter Password: ");
+            string password = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                Console.WriteLine("Password cannot be empty");
+                return;
+            }
+
+            SHA256 sha256 = SHA256.Create();
+
+            byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+
+            StringBuilder builder = new StringBuilder();
+
+            foreach (byte b in bytes)
+            {
+                builder.Append(b.ToString("x2"));
+            }
+
+            string hashedPassword = builder.ToString();
+
+            Console.WriteLine("Enter Phone: ");
+            string phone = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(phone))
+            {
+                Console.WriteLine("Phone cannot be empty");
+                return;
+            }
+
+            Console.WriteLine("Enter Role: ");
+            string role = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(role))
+            {
+                Console.WriteLine("Role cannot be empty");
+                return;
+            }
+
+            context.Users.Add(new User { Name = name, Email = email, Password = hashedPassword, Phone = phone, Role = role, CreatedAt = DateTime.Now });
+
+            context.SaveChanges();
+
+            Console.WriteLine("User Registered Successfully");
+        }
+        static void Login()
+        {
+            Console.Write("Enter User Name: ");
+            string loginName = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(loginName))
+            {
+                Console.WriteLine("User Name cannot be empty");
+                return;
+            }
+
+            Console.Write("Enter Password: ");
+            string loginPassword = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(loginPassword))
+            {
+                Console.WriteLine("Password cannot be empty");
+                return;
+            }
+
+            SHA256 sha256 = SHA256.Create();
+
+            byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(loginPassword));
+
+            StringBuilder builder = new StringBuilder();
+
+            foreach (byte b in bytes)
+            {
+                builder.Append(b.ToString("x2"));
+            }
+
+            string hashedLoginPassword = builder.ToString();
+
+            var foundUser = context.Users.FirstOrDefault(u => u.Name == loginName && u.Password == hashedLoginPassword);
+
+            if (foundUser != null)
+            {
+                currentUserId = foundUser.U_Id;
+
+                Console.WriteLine("Login Successful");
+            }
+
+            else
+            {
+                Console.WriteLine("Invalid Username or Password");
+            }
+        }
         static void MainMenu()
         {
             while (true)
@@ -30,63 +191,134 @@ namespace E_CommerceSystem
                 Console.WriteLine("0. Exit");
 
                 Console.Write("Enter your choice: ");
-                int choice = int.Parse(Console.ReadLine());
+
+                int choice;
+
+                if (!int.TryParse(Console.ReadLine(), out choice))
+                {
+                    Console.WriteLine("Invalid Choice");
+                    Console.WriteLine("Press any key to continue...");
+                    Console.ReadKey();
+                    Console.Clear();
+                    continue;
+                }
 
                 switch (choice)
                 {
                     case 1:
-                        UserDetails();
+
+                        if (CheckLogin())
+                        {
+                            UserDetails();
+                        }
+
                         break;
 
                     case 2:
-                        AddNewProduct();
+
+                        if (CheckLogin())
+                        {
+                            AddNewProduct();
+                        }
+
                         break;
 
                     case 3:
-                        UpdateProductDetails();
+
+                        if (CheckLogin())
+                        {
+                            UpdateProductDetails();
+                        }
+
                         break;
 
                     case 4:
+
                         GetProductsList();
+
                         break;
 
                     case 5:
-                        GetProductDetailsById(); 
+
+                        GetProductDetailsById();
+
                         break;
 
                     case 6:
-                        PlaceNewOrder(); 
+
+                        if (CheckLogin())
+                        {
+                            PlaceNewOrder();
+                        }
+
                         break;
 
                     case 7:
-                        GetAllOrdersForUser();
+
+                        if (CheckLogin())
+                        {
+                            GetAllOrdersForUser();
+                        }
+
                         break;
 
                     case 8:
-                        GetOrderDetailsById();
+
+                        if (CheckLogin())
+                        {
+                            GetOrderDetailsById();
+                        }
+
                         break;
 
                     case 9:
-                        AddReviewForProduct();
+
+                        if (CheckLogin())
+                        {
+                            AddReviewForProduct();
+                        }
+
                         break;
 
                     case 10:
-                        GetAllReviewsForProduct(); 
+
+                        GetAllReviewsForProduct();
+
                         break;
 
                     case 11:
-                        UpdateReview(); 
+
+                        if (CheckLogin())
+                        {
+                            UpdateReview();
+                        }
+
                         break;
 
                     case 12:
-                        DeleteReview();
+
+                        if (CheckLogin())
+                        {
+                            DeleteReview();
+                        }
+
                         break;
 
                     case 0:
-                        Console.WriteLine("Exiting the program...");
-                        return;
+
+                        Console.Write("Are you sure you want to exit? (yes/no): ");
+                        string answer = Console.ReadLine();
+
+                        if (answer.ToLower() == "yes")
+                        {
+                            Console.WriteLine("Exiting the program...");
+                            return;
+                        }
+
+                        break;
 
                     default:
+
                         Console.WriteLine("Invalid Choice. Please try again.");
                         break;
                 }
@@ -96,89 +328,137 @@ namespace E_CommerceSystem
                 Console.Clear();
             }
         }
-
-        static void Register()
+        static void Main(string[] args)
         {
-            Console.WriteLine("Enter Name: ");
-            string name = Console.ReadLine();
+            context.Database.EnsureCreated();
 
-            Console.WriteLine("Enter Email: ");
-            string email = Console.ReadLine();
-
-            Console.WriteLine("Enter Password: ");
-            string password = Console.ReadLine();
-
-            Console.WriteLine("Enter Phone: ");
-            string phone = Console.ReadLine();
-
-            Console.WriteLine("Enter Role: ");
-            string role = Console.ReadLine();
-
-            context.Users.Add(new User { Name = name, Email = email, Password = password, Phone = phone, Role = role, CreatedAt = DateTime.Now });
-            context.SaveChanges();
-
-            Console.WriteLine("User Registered Successfully");
+            MainMenu();
         }
-        static void UserDetails()  
+        static void UserDetails()
         {
-            Console.Write("Enter User ID: ");
-            int userId = int.Parse(Console.ReadLine());
+            var foundUser = context.Users.FirstOrDefault(u => u.U_Id == currentUserId);
 
-            User foundUser = context.Users.FirstOrDefault(u => u.U_Id == userId);
+            Console.WriteLine($"ID: {foundUser.U_Id}");
+            Console.WriteLine($"Name: {foundUser.Name}");
+            Console.WriteLine($"Email: {foundUser.Email}");
+            Console.WriteLine($"Phone: {foundUser.Phone}");
+            Console.WriteLine($"Role: {foundUser.Role}");
+            Console.WriteLine($"Created At: {foundUser.CreatedAt}");
 
-            if (foundUser != null)
-            {
-                Console.WriteLine($"ID: {foundUser.U_Id}");
-                Console.WriteLine($"Name: {foundUser.Name}");
-                Console.WriteLine($"Email: {foundUser.Email}");
-                Console.WriteLine($"Phone: {foundUser.Phone}");
-                Console.WriteLine($"Role: {foundUser.Role}");
-                Console.WriteLine($"Created At: {foundUser.CreatedAt}");
-            }
-
-            else
-            {
-                Console.WriteLine("User Not Found");
-            }
-        } 
+        }
         static void AddNewProduct()
         {
-            Console.WriteLine("Enter Product Name: ");
+            Console.Write("Enter Product Name: ");
             string name = Console.ReadLine();
 
-            Console.WriteLine("Enter Description: ");
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                Console.WriteLine("Product Name cannot be empty");
+                return;
+            }
+
+            Console.Write("Enter Description: ");
             string description = Console.ReadLine();
 
-            Console.WriteLine("Enter Price: ");
-            decimal price = decimal.Parse(Console.ReadLine());
+            Console.Write("Enter Price: ");
 
-            Console.WriteLine("Enter Stock: ");
-            int stock = int.Parse(Console.ReadLine());
+            decimal price;
 
-            context.Products.Add(new Product { Name = name ,Description = description, Price = price, Stock = stock, OverallRating = 0 });
+            if (!decimal.TryParse(Console.ReadLine(), out price) || price <= 0)
+            {
+                Console.WriteLine("Invalid Price");
+                return;
+            }
+
+            Console.Write("Enter Stock: ");
+
+            int stock;
+
+            if (!int.TryParse(Console.ReadLine(), out stock) || stock < 0)
+            {
+                Console.WriteLine("Invalid Stock");
+                return;
+            }
+
+            context.Products.Add(new Product { Name = name, Description = description, Price = price, Stock = stock, OverallRating = 0 });
+
             context.SaveChanges();
 
             Console.WriteLine("Product Added Successfully");
         }
         static void UpdateProductDetails()
         {
+            var products = context.Products.ToList();
+
+            if (products.Count == 0)
+            {
+                Console.WriteLine("No Products Found");
+                return;
+            }
+
+            Console.WriteLine("===== Available Products =====");
+
+            foreach (var item in products)
+            {
+                Console.WriteLine($"ID: {item.P_Id}");
+                Console.WriteLine($"Name: {item.Name}");
+                Console.WriteLine($"Description: {item.Description}");
+                Console.WriteLine($"Price: {item.Price}");
+                Console.WriteLine($"Stock: {item.Stock}");
+                Console.WriteLine("----------------------");
+            }
+
             Console.WriteLine("Enter Product ID: ");
-            int productId = int.Parse(Console.ReadLine());
+
+            int productId;
+
+            if (!int.TryParse(Console.ReadLine(), out productId))
+            {
+                Console.WriteLine("Invalid Product ID");
+                return;
+            }
 
             Product product = context.Products.FirstOrDefault(p => p.P_Id == productId);
+
             if (product != null)
             {
                 Console.WriteLine("Enter New Product Name: ");
-                product.Name = Console.ReadLine();
+                string name = Console.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    Console.WriteLine("Product Name cannot be empty");
+                    return;
+                }
+
+                product.Name = name;
 
                 Console.WriteLine("Enter New Description: ");
                 product.Description = Console.ReadLine();
 
                 Console.WriteLine("Enter New Price: ");
-                product.Price = decimal.Parse(Console.ReadLine());
+
+                decimal price;
+
+                if (!decimal.TryParse(Console.ReadLine(), out price) || price <= 0)
+                {
+                    Console.WriteLine("Invalid Price");
+                    return;
+                }
+
+                product.Price = price;
 
                 Console.WriteLine("Enter New Stock: ");
-                product.Stock = int.Parse(Console.ReadLine());
+
+                int stock;
+
+                if (!int.TryParse(Console.ReadLine(), out stock) || stock < 0)
+                {
+                    Console.WriteLine("Invalid Stock");
+                    return;
+                }
+
+                product.Stock = stock;
 
                 context.SaveChanges();
 
@@ -252,22 +532,227 @@ namespace E_CommerceSystem
                 Console.WriteLine("Product Not Found");
             }
         }
+        static void PlaceNewOrder()
+        {
+            decimal totalAmount = 0;
+
+            Order newOrder = new Order
+            {
+                U_Id = currentUserId,
+                OrderDate = DateTime.Now,
+                TotalAmount = totalAmount
+            };
+
+            context.Orders.Add(newOrder);
+            context.SaveChanges();
+
+            while (true)
+            {
+                var products = context.Products.ToList();
+
+                if (products.Count == 0)
+                {
+                    Console.WriteLine("No Products Found");
+                    return;
+                }
+
+                Console.WriteLine("===== Available Products =====");
+
+                foreach (var item in products)
+                {
+                    Console.WriteLine($"ID: {item.P_Id}");
+                    Console.WriteLine($"Name: {item.Name}");
+                    Console.WriteLine($"Description: {item.Description}");
+                    Console.WriteLine($"Price: {item.Price}");
+                    Console.WriteLine($"Stock: {item.Stock}");
+                    Console.WriteLine("----------------------");
+                }
+
+                Console.Write("Enter Product ID: ");
+
+                int productId;
+
+                if (!int.TryParse(Console.ReadLine(), out productId))
+                {
+                    Console.WriteLine("Invalid Product ID");
+                    return;
+                }
+
+                Console.Write("Enter Quantity: ");
+
+                int quantity;
+
+                if (!int.TryParse(Console.ReadLine(), out quantity) || quantity <= 0)
+                {
+                    Console.WriteLine("Invalid Quantity");
+                    return;
+                }
+
+                Product product = context.Products.FirstOrDefault(p => p.P_Id == productId);
+
+                if (product == null)
+                {
+                    Console.WriteLine("Product Not Found");
+                    return;
+                }
+
+                if (product.Stock < quantity)
+                {
+                    Console.WriteLine("Not enough stock available");
+                    return;
+                }
+
+                context.OrderProducts.Add(new OrderProduct
+                {
+                    O_Id = newOrder.O_Id,
+                    P_Id = product.P_Id,
+                    Quantity = quantity
+                });
+
+                product.Stock = product.Stock - quantity;
+
+                totalAmount = totalAmount + (product.Price * quantity);
+
+                Console.Write("Do you want to add another product? (yes/no): ");
+                string answer = Console.ReadLine();
+
+                if (answer.ToLower() != "yes")
+                {
+                    break;
+                }
+            }
+
+            newOrder.TotalAmount = totalAmount;
+
+            context.SaveChanges();
+
+            Console.WriteLine("Order Placed Successfully");
+            Console.WriteLine($"Total Amount: {totalAmount}");
+        }
+        static void GetAllOrdersForUser()
+        {
+            var orders = context.Orders
+                .Where(o => o.U_Id == currentUserId)
+                .ToList();
+
+            if (orders.Count > 0)
+            {
+                foreach (var order in orders)
+                {
+                    Console.WriteLine($"Order ID: {order.O_Id}");
+                    Console.WriteLine($"User ID: {order.U_Id}");
+                    Console.WriteLine($"Order Date: {order.OrderDate}");
+                    Console.WriteLine($"Total Amount: {order.TotalAmount}");
+                }
+            }
+
+            else
+            {
+                Console.WriteLine("No Orders Found");
+            }
+        }
+        static void GetOrderDetailsById()
+        {
+            Console.Write("Enter Order ID: ");
+            int orderId = int.Parse(Console.ReadLine());
+
+            Order order = context.Orders.FirstOrDefault(o => o.O_Id == orderId && o.U_Id == currentUserId);
+
+            if (order != null)
+            {
+                Console.WriteLine($"Order ID: {order.O_Id}");
+                Console.WriteLine($"User ID: {order.U_Id}");
+                Console.WriteLine($"Order Date: {order.OrderDate}");
+                Console.WriteLine($"Total Amount: {order.TotalAmount}");
+            }
+
+            else
+            {
+                Console.WriteLine("Order Not Found");
+            }
+        }
         static void AddReviewForProduct()
         {
+            var products = context.Products.ToList();
+
+            if (products.Count == 0)
+            {
+                Console.WriteLine("No Products Found");
+                return;
+            }
+
+            Console.WriteLine("===== Available Products =====");
+
+            foreach (var item in products)
+            {
+                Console.WriteLine($"ID: {item.P_Id}");
+                Console.WriteLine($"Name: {item.Name}");
+                Console.WriteLine($"Description: {item.Description}");
+                Console.WriteLine($"Price: {item.Price}");
+                Console.WriteLine($"Stock: {item.Stock}");
+                Console.WriteLine("----------------------");
+            }
+
             Console.WriteLine("Enter Product ID: ");
-            int productId = int.Parse(Console.ReadLine());
+
+            int productId;
+
+            if (!int.TryParse(Console.ReadLine(), out productId))
+            {
+                Console.WriteLine("Invalid Product ID");
+                return;
+            }
 
             Product product = context.Products.FirstOrDefault(p => p.P_Id == productId);
 
             if (product != null)
             {
+                bool purchasedProduct = context.OrderProducts
+                    .Any(op => op.P_Id == productId && op.Order.U_Id == currentUserId);
+
+                if (!purchasedProduct)
+                {
+                    Console.WriteLine("You can only review products you purchased");
+                    return;
+                }
+
+                bool alreadyReviewed = context.Reviews
+                    .Any(r => r.P_Id == productId && r.U_Id == currentUserId);
+
+                if (alreadyReviewed)
+                {
+                    Console.WriteLine("You already reviewed this product");
+                    return;
+                }
+
                 Console.Write("Enter Rating (1 - 5): ");
-                int rating = int.Parse(Console.ReadLine());
+
+                int rating;
+
+                if (!int.TryParse(Console.ReadLine(), out rating) || rating < 1 || rating > 5)
+                {
+                    Console.WriteLine("Invalid Rating");
+                    return;
+                }
 
                 Console.Write("Enter Comment: ");
                 string comment = Console.ReadLine();
-                
-                context.Reviews.Add(new Review { P_Id = productId, U_Id = currentUserId , Rating = rating, Comment = comment , ReviewDate= DateTime.Now});
+
+                context.Reviews.Add(new Review
+                {
+                    P_Id = productId,
+                    U_Id = currentUserId,
+                    Rating = rating,
+                    Comment = comment,
+                    ReviewDate = DateTime.Now
+                });
+
+                context.SaveChanges();
+
+                product.OverallRating = (decimal)context.Reviews
+                    .Where(r => r.P_Id == productId)
+                    .Average(r => r.Rating);
+
                 context.SaveChanges();
 
                 Console.WriteLine("Review Added Successfully");
@@ -311,110 +796,44 @@ namespace E_CommerceSystem
                 Console.WriteLine("No Reviews Found");
             }
         }
-        static void PlaceNewOrder()
-        {
-            Console.Write("Enter Product ID: ");
-            int productId = int.Parse(Console.ReadLine());
-
-            Console.Write("Enter Quantity: ");
-            int quantity = int.Parse(Console.ReadLine());
-
-            Product product = context.Products.FirstOrDefault(p => p.P_Id == productId);
-
-            if (product == null)
-            {
-                Console.WriteLine("Product Not Found");
-                return;
-            }
-
-            if (product.Stock < quantity)
-            {
-                Console.WriteLine("Not enough stock available");
-                return;
-            }
-
-            decimal totalAmount = product.Price * quantity;
-
-            Order newOrder = new Order
-            {
-                U_Id = currentUserId,
-                OrderDate = DateTime.Now,
-                TotalAmount = totalAmount
-            };
-
-            context.Orders.Add(newOrder);
-            context.SaveChanges();
-
-            context.OrderProducts.Add(new OrderProduct
-            {
-                O_Id = newOrder.O_Id,
-                P_Id = product.P_Id,
-                Quantity = quantity
-            });
-
-            product.Stock = product.Stock - quantity;
-
-            context.SaveChanges();
-
-            Console.WriteLine("Order Placed Successfully");
-            Console.WriteLine($"Total Amount: {totalAmount}");
-        }
-        static void GetAllOrdersForUser()
-        {
-            var orders = context.Orders
-                .Where(o => o.U_Id == currentUserId)
-                .ToList();
-
-            if (orders.Count > 0)
-            {
-                foreach (var order in orders)
-                {
-                    Console.WriteLine($"Order ID: {order.O_Id}");
-                    Console.WriteLine($"User ID: {order.U_Id}");
-                    Console.WriteLine($"Order Date: {order.OrderDate}");
-                    Console.WriteLine($"Total Amount: {order.TotalAmount}");
-                }
-            }
-
-            else
-            {
-                Console.WriteLine("No Orders Found");
-            }
-        }
-        static void GetOrderDetailsById()
-        {
-            Console.Write("Enter Order ID: ");
-            int orderId = int.Parse(Console.ReadLine());
-
-            Order order = context.Orders.FirstOrDefault(o => o.O_Id == orderId && o.U_Id == currentUserId );
-
-            if (order != null)
-            {
-                Console.WriteLine($"Order ID: {order.O_Id}");
-                Console.WriteLine($"User ID: {order.U_Id}");
-                Console.WriteLine($"Order Date: {order.OrderDate}");
-                Console.WriteLine($"Total Amount: {order.TotalAmount}");
-            }
-
-            else
-            {
-                Console.WriteLine("Order Not Found");
-            }
-        } 
         static void UpdateReview()
         {
             Console.Write("Enter Review ID: ");
-            int reviewId = int.Parse(Console.ReadLine());
 
-            Review review = context.Reviews.FirstOrDefault( r => r.R_Id == reviewId && r.U_Id == currentUserId );
+            int reviewId;
+
+            if (!int.TryParse(Console.ReadLine(), out reviewId))
+            {
+                Console.WriteLine("Invalid Review ID");
+                return;
+            }
+
+            Review review = context.Reviews.FirstOrDefault(r => r.R_Id == reviewId && r.U_Id == currentUserId);
 
             if (review != null)
             {
                 Console.Write("Enter New Rating: ");
-                review.Rating = int.Parse(Console.ReadLine());
+
+                int rating;
+
+                if (!int.TryParse(Console.ReadLine(), out rating) || rating < 1 || rating > 5)
+                {
+                    Console.WriteLine("Invalid Rating");
+                    return;
+                }
+
+                review.Rating = rating;
 
                 Console.Write("Enter New Comment: ");
                 review.Comment = Console.ReadLine();
+
+                context.SaveChanges();
+
+                Product product = context.Products.FirstOrDefault(p => p.P_Id == review.P_Id);
+
+                product.OverallRating = (decimal)context.Reviews
+                    .Where(r => r.P_Id == review.P_Id)
+                    .Average(r => r.Rating);
 
                 context.SaveChanges();
 
@@ -429,13 +848,39 @@ namespace E_CommerceSystem
         static void DeleteReview()
         {
             Console.Write("Enter Review ID: ");
-            int reviewId = int.Parse(Console.ReadLine());
+
+            int reviewId;
+
+            if (!int.TryParse(Console.ReadLine(), out reviewId))
+            {
+                Console.WriteLine("Invalid Review ID");
+                return;
+            }
 
             Review review = context.Reviews.FirstOrDefault(r => r.R_Id == reviewId && r.U_Id == currentUserId);
 
             if (review != null)
             {
+                int productId = review.P_Id;
+
                 context.Reviews.Remove(review);
+
+                context.SaveChanges();
+
+                Product product = context.Products.FirstOrDefault(p => p.P_Id == productId);
+
+                var remainingReviews = context.Reviews
+                    .Where(r => r.P_Id == productId)
+                    .ToList();
+
+                if (remainingReviews.Count > 0)
+                {
+                    product.OverallRating = (decimal)remainingReviews.Average(r => r.Rating);
+                }
+                else
+                {
+                    product.OverallRating = 0;
+                }
 
                 context.SaveChanges();
 
@@ -447,72 +892,6 @@ namespace E_CommerceSystem
                 Console.WriteLine("Review Not Found");
             }
         }
-        static void Main(string[] args)
-        {
-             context.Database.EnsureCreated();
 
-            while (true)
-            {
-                Console.WriteLine("===== Welcome =====");
-
-                Console.WriteLine("1. Register");
-                Console.WriteLine("2. Login");
-                Console.WriteLine("0. Exit");
-
-                Console.Write("Enter your choice: ");
-                int firstChoice = int.Parse(Console.ReadLine());
-
-                switch (firstChoice)
-                {
-                    case 1:
-                        Register();
-                        break;
-
-                    case 2:
-
-                        Console.Write("Enter User Name: ");
-                        string loginName = Console.ReadLine();
-
-                        Console.Write("Enter Password: ");
-                        string loginPassword = Console.ReadLine();
-
-                        var foundUser = context.Users.FirstOrDefault(u => u.Name == loginName && u.Password == loginPassword);
-
-                        if (foundUser != null)
-                        {
-                            currentUserId = foundUser.U_Id;
-
-                            Console.WriteLine("Login Successful");
-                            Console.WriteLine("Press any key to continue...");
-                            Console.ReadKey();
-                            Console.Clear();
-
-                            MainMenu ();
-                        }
-
-                        else
-                        {
-                            Console.WriteLine("Invalid Username or Password");
-                        }
-
-                        break;
-
-                    case 0:
-
-                        Console.WriteLine("Exiting the program...");
-                        return;
-
-                    default:
-
-                        Console.WriteLine("Invalid Choice");
-                        break;
-                }
-
-                Console.WriteLine("Press any key to continue...");
-                Console.ReadKey();
-                Console.Clear();
-            }
-        
-        }
     }
 }
